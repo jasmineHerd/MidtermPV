@@ -7,7 +7,7 @@ package financials;
 import business.Annuity;
 import business.Financial;
 import business.Loan;
-import com.sun.imageio.plugins.common.I18N;
+import business.PV;
 import org.jdesktop.application.Action;
 import org.jdesktop.application.ResourceMap;
 import org.jdesktop.application.SingleFrameApplication;
@@ -125,6 +125,7 @@ public class FinancialsView extends FrameView {
         jbtnCalc = new javax.swing.JButton();
         jbtnSched = new javax.swing.JButton();
         jbtnClear = new javax.swing.JButton();
+        jradPV = new javax.swing.JRadioButton();
         menuBar = new javax.swing.JMenuBar();
         javax.swing.JMenu fileMenu = new javax.swing.JMenu();
         javax.swing.JMenuItem exitMenuItem = new javax.swing.JMenuItem();
@@ -221,6 +222,16 @@ public class FinancialsView extends FrameView {
             }
         });
 
+        buttonGroup1.add(jradPV);
+        jradPV.setFont(resourceMap.getFont("jradPV.font")); // NOI18N
+        jradPV.setText(resourceMap.getString("jradPV.text")); // NOI18N
+        jradPV.setName("jradPV"); // NOI18N
+        jradPV.addItemListener(new java.awt.event.ItemListener() {
+            public void itemStateChanged(java.awt.event.ItemEvent evt) {
+                jradPVItemStateChanged(evt);
+            }
+        });
+
         javax.swing.GroupLayout mainPanelLayout = new javax.swing.GroupLayout(mainPanel);
         mainPanel.setLayout(mainPanelLayout);
         mainPanelLayout.setHorizontalGroup(
@@ -239,15 +250,17 @@ public class FinancialsView extends FrameView {
                             .addComponent(jLabel3, javax.swing.GroupLayout.PREFERRED_SIZE, 176, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(jLabel5))
                         .addGap(18, 18, 18)
-                        .addGroup(mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                        .addGroup(mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(mainPanelLayout.createSequentialGroup()
                                 .addComponent(jradAnnuity)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addComponent(jradLoan))
+                                .addGap(18, 18, 18)
+                                .addComponent(jradLoan)
+                                .addGap(18, 18, 18)
+                                .addComponent(jradPV))
                             .addComponent(jtxtRate, javax.swing.GroupLayout.PREFERRED_SIZE, 181, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(jtxtAmt, javax.swing.GroupLayout.PREFERRED_SIZE, 181, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(jtxtTerm, javax.swing.GroupLayout.PREFERRED_SIZE, 181, javax.swing.GroupLayout.PREFERRED_SIZE))))
-                .addContainerGap(88, Short.MAX_VALUE))
+                .addContainerGap(114, Short.MAX_VALUE))
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, mainPanelLayout.createSequentialGroup()
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addGroup(mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -265,11 +278,12 @@ public class FinancialsView extends FrameView {
         mainPanelLayout.setVerticalGroup(
             mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(mainPanelLayout.createSequentialGroup()
-                .addGap(33, 33, 33)
+                .addGap(32, 32, 32)
                 .addGroup(mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel5)
                     .addComponent(jradAnnuity)
-                    .addComponent(jradLoan))
+                    .addComponent(jradLoan)
+                    .addComponent(jradPV))
                 .addGap(31, 31, 31)
                 .addGroup(mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel1)
@@ -292,7 +306,7 @@ public class FinancialsView extends FrameView {
                 .addComponent(jbtnSched)
                 .addGap(18, 18, 18)
                 .addComponent(jbtnClear)
-                .addContainerGap(34, Short.MAX_VALUE))
+                .addContainerGap(8, Short.MAX_VALUE))
         );
 
         menuBar.setName("menuBar"); // NOI18N
@@ -331,11 +345,11 @@ public class FinancialsView extends FrameView {
         statusPanel.setLayout(statusPanelLayout);
         statusPanelLayout.setHorizontalGroup(
             statusPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(statusPanelSeparator, javax.swing.GroupLayout.DEFAULT_SIZE, 536, Short.MAX_VALUE)
+            .addComponent(statusPanelSeparator, javax.swing.GroupLayout.DEFAULT_SIZE, 568, Short.MAX_VALUE)
             .addGroup(statusPanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(statusMessageLabel)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 366, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 400, Short.MAX_VALUE)
                 .addComponent(progressBar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(statusAnimationLabel)
@@ -389,7 +403,10 @@ public class FinancialsView extends FrameView {
             
         }else if(jradLoan.isSelected()){
             f = new Loan(a, r, t);
-        }else{
+        }else if(jradPV.isSelected()){
+            f = new PV(a,r,t);
+        }
+        else{
             statusMessageLabel.setText("No operation selected.");
             return;
         }
@@ -425,52 +442,101 @@ public class FinancialsView extends FrameView {
         DefaultTableModel mod;
         String[] cols;
         String[][] t;
-        if(f instanceof Annuity){
-            cols = new String[]{"Month",
-                                 Annuity.BEGBALDESC,
-                                 Annuity.PRINCFACTORDSC,
-                                 Annuity.INTFACTORDESC,
-                                 Annuity.ENDBALDESC};
-        }else if(f instanceof Loan){
-            cols = new String[]{"Month",
-                                Loan.BEGBALDESC,
-                                Loan.PRINCFACTORDESC,
-                                Loan.INTFACTORDESC,
-                                Loan.ENDBALDESC,
-                                Loan.PRINPAIDDESC};
-        }else{
+        if (f instanceof Annuity)
+        {
+            cols = new String[]
+            {"Month",
+                Annuity.BEGBALDESC,
+                Annuity.PRINCFACTORDSC,
+                Annuity.INTFACTORDESC,
+                Annuity.ENDBALDESC
+            };
+            t = new String[f.getTerm()][cols.length];
+        } 
+        
+        else if (f instanceof Loan)
+        {
+            cols = new String[]
+            {"Month",
+                Loan.BEGBALDESC,
+                Loan.PRINCFACTORDESC,
+                Loan.INTFACTORDESC,
+                Loan.ENDBALDESC,
+                Loan.PRINPAIDDESC
+            };
+            t = new String[f.getTerm()][cols.length];
+        } 
+        else if (f instanceof PV)
+        {
+            cols = new String[]
+            {"Month",
+                PV.INTFACTORDESC,
+                PV.ENDBALDESC
+            };
+            t = new String[f.getTerm() + 1][cols.length];
+
+        } 
+        else 
+        {
             statusMessageLabel.setText("Schedule requested for non-initialized object");
             return;
         }
         //rows
-        t = new String[f.getTerm()][cols.length];
-        mod = new DefaultTableModel(t,cols);
+
+        mod = new DefaultTableModel(t, cols);
         sched = new JTable(mod);
+
+        if (f instanceof PV)
+        {
+            for (int i = 0; i <= f.getTerm(); i++) 
+            {
+                sched.setValueAt(i, i, 0);
+                sched.setValueAt(
+                        curr.format((f.getIntFactor(i))), i, 1);
+                sched.setValueAt(
+                        curr.format(f.getBegBal(i)), i, 2);
+            }
+        } 
+        else 
+        {
+
+            for (int i = 0; i < f.getTerm(); i++) 
+            {
+                
+                
+                    sched.setValueAt(i + 1, i, 0);
+                    sched.setValueAt(
+                            curr.format(f.getBegBal(i + 1)), i, 1);
+                    sched.setValueAt(
+                            curr.format(f.getPrinFactor(i + 1)), i, 2);
+                    sched.setValueAt(
+                            curr.format(f.getIntFactor(i + 1)), i, 3);
+                    sched.setValueAt(
+                            curr.format(f.getEndBal(i + 1)), i, 4);
+                    
+                    if (f instanceof Loan)
+                    {
+                        double pp = ((Loan) f).getPrinPaid(i + 1);
+                        sched.setValueAt(curr.format(pp), i, 5);
+                    }
+
+                }
+            }
+
+            JScrollPane sp = new JScrollPane(sched);
+            JDialog dg = new JDialog();
+            dg.add(sp);
+            dg.setTitle(f.getTitle());
+            dg.setBounds(150, 400, 600, 300);
+            dg.setVisible(true);
+            for (int i = 1; i < cols.length; i++)
+            {
+                DefaultTableCellRenderer rightRenderer = new DefaultTableCellRenderer();
+                rightRenderer.setHorizontalAlignment(JLabel.RIGHT);
+                sched.getColumnModel().getColumn(i).setCellRenderer(rightRenderer);
+            }
         
-        for(int i = 0;i < f.getTerm();i++){
-            sched.setValueAt(i+1, i, 0);
-            sched.setValueAt(
-                    curr.format(f.getBegBal(i+1)), i, 1);
-            sched.setValueAt(
-                    curr.format(f.getPrinFactor(i+1)), i, 2);
-            sched.setValueAt(
-                    curr.format(f.getIntFactor(i+1)), i, 3);
-            sched.setValueAt(
-                    curr.format(f.getEndBal(i+1)), i, 4);
-            if(f instanceof Loan){
-              double pp = ((Loan)f).getPrinPaid(i+1);
-              sched.setValueAt(curr.format(pp), i, 5);
-        }}
-        JScrollPane sp = new JScrollPane(sched);
-        JDialog dg = new JDialog();
-        dg.add(sp);
-        dg.setTitle(f.getTitle());
-        dg.setBounds(150,400,600,300);
-        dg.setVisible(true);
-        for(int i = 1;i < cols.length;i++){
-        DefaultTableCellRenderer rightRenderer = new DefaultTableCellRenderer();
-        rightRenderer.setHorizontalAlignment(JLabel.RIGHT);
-        sched.getColumnModel().getColumn(i).setCellRenderer(rightRenderer);}
+    
     }//GEN-LAST:event_jbtnSchedActionPerformed
 
     private void jbtnClearActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbtnClearActionPerformed
@@ -481,10 +547,15 @@ public class FinancialsView extends FrameView {
         jtxtResult.setText("");
         jtxtTerm.setText("");
         jbtnSched.setEnabled(false);
-        
-     
-        
+
+
     }//GEN-LAST:event_jbtnClearActionPerformed
+
+    private void jradPVItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_jradPVItemStateChanged
+        if(jradPV.isSelected()){
+            jLabel1.setText(PV.AMTDESC + ": ");
+            jLabel4.setText(PV.RESULTDESC+ ": ");}
+    }//GEN-LAST:event_jradPVItemStateChanged
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.ButtonGroup buttonGroup1;
@@ -498,6 +569,7 @@ public class FinancialsView extends FrameView {
     private javax.swing.JButton jbtnSched;
     private javax.swing.JRadioButton jradAnnuity;
     private javax.swing.JRadioButton jradLoan;
+    private javax.swing.JRadioButton jradPV;
     private javax.swing.JTextField jtxtAmt;
     private javax.swing.JTextField jtxtRate;
     private javax.swing.JTextField jtxtResult;

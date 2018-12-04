@@ -99,10 +99,6 @@ public class Annuity extends Financial{
         return this.ebal[mo-1];
     }
 
-
-//question to self?
-    //what is the purpose of the abstract method ?
-    //Why not just write the method here and be done with it?
     
     @Override
     public double getResult() {
